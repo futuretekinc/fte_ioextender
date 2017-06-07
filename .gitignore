@@ -1,0 +1,49 @@
+# Tools files
+Release/
+Debug/
+build/
+*.dep
+*.dni
+*.wsdt
+*.tmp
+*.pbxproj
+*.vcproj
+*.vcxproj
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+*.bak
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/*.o
+*.dbgdt
+*.dbgdt
+
+settings/fte.wspos
