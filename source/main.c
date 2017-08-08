@@ -66,6 +66,10 @@ typedef enum    FTE_IOEX_TASK_STATUS_ENUM
 #define FTE_IOEX_HOLDING_REGISTER_START_ADDRESS 0x4000
 #define FTE_IOEX_HOLDING_REGISTER_COUNT         2
 
+#define FTE_IOEX_CONFIG_REGISTER_HOLDTIME_ADDRESS   0x6000
+#define FTE_IOEX_DI_HOLDTIME                        5000
+#define FTE_IOEX_CONFIG_REGISTER_COUNT              1
+#define FTE_IOEX_CONFIG_REGISTER_START_ADDRESS      0x6000
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Variables
@@ -76,6 +80,8 @@ uint16_t    usTransmissionInterval = FTE_IOEX_DEFAULT_TRANSMITION_INTERVAL / FTE
 uint16_t    usRxFrameTimeout = FTE_IOEX_DEFAULT_RX_FRAME_TIMEOUT / FTE_IOEX_MS_PER_TICK;
 
 uint8_t     bDIs[16] = { 0, };
+uint32_t    ulHoldTimes[16] = { 0, };
+uint32_t    ulHoldTime = FTE_IOEX_DI_HOLDTIME;
 uint8_t     pRxBuff[32];
 uint8_t     pTxFrame[32];
 uint8_t     pRxFrame[32];
@@ -224,6 +230,25 @@ uint32_t FTE_IOEX_writeSingleRegister(uint8_t * pFrame, uint32_t ulMaxSize, uint
             break;
         }   
     }
+    else if ((FTE_IOEX_CONFIG_REGISTER_START_ADDRESS <= usAddress) &&
+        (usAddress < FTE_IOEX_CONFIG_REGISTER_START_ADDRESS + FTE_IOEX_CONFIG_REGISTER_COUNT))
+    {    
+        pFrame[nTxFrameLen++] = 0x00;
+        pFrame[nTxFrameLen++] = 0x02;
+        pFrame[nTxFrameLen++] = (usAddress >> 8) & 0xFF;
+        pFrame[nTxFrameLen++] = (usAddress     ) & 0xFF;
+        pFrame[nTxFrameLen++] = (usValue >> 8) & 0xFF;
+        pFrame[nTxFrameLen++] = (usValue     ) & 0xFF;
+        
+        switch(usAddress)
+        {
+        case    FTE_IOEX_CONFIG_REGISTER_HOLDTIME_ADDRESS:
+            {
+                ulHoldTime = usValue / 10;
+            }
+            break;
+        }   
+    }
     else 
     {
         pFrame[nTxFrameLen++] = 0x00;
@@ -282,10 +307,15 @@ int main (void)
         
         for(i = 0 ; i < FTE_IOEX_MAX_DI ; i++)
         {
-            if (bDIs[i] != GPIO_DRV_ReadPinInput(inputPins[i].pinName))
+            if (rand() % 2)
+//            if (bDIs[i] != GPIO_DRV_ReadPinInput(inputPins[i].pinName))
             {
-                bDIs[i] = !bDIs[i];
-                bChanged = true;
+                if ((ulHoldTimes[i] == 0) || ((ulTicks - ulHoldTimes[i]) >= 500))
+                {
+                    bDIs[i] = !bDIs[i];
+                    ulHoldTimes[i] = ulTicks;
+                    bChanged = true;
+                }
             }
         }
         
